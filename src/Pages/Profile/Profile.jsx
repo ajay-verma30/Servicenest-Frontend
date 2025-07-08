@@ -45,7 +45,7 @@ function Profile() {
         }
       })
       if (result.status === 200){
-        setPassword(" ")
+        setPassword("")
       }
     }
     catch(e){
