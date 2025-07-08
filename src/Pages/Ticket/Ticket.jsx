@@ -3,9 +3,10 @@ import { Button, Container, Form, Modal } from 'react-bootstrap';
 import './Ticket.css';
 import { AuthContext } from '../../Context/AuthContext';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; 
-import { faForward, faBackward } from '@fortawesome/free-solid-svg-icons';
+import { faPencil,faForward,faBackward } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
 
 function Ticket() {
   const navigate = useNavigate();
@@ -25,18 +26,35 @@ function Ticket() {
   const handleShow = () => setShow(true);
 
   const fetchTickets = async () => {
-    if (!auth?.token || !auth?.user?.role) return;
     try {
-      const url = (auth.user.role === "admin" || auth.user.role === "agent")
-        ? 'https://servicenest-backend.onrender.com/tickets/all-tickets'
-        : 'https://servicenest-backend.onrender.com/tickets/my-tickets';
-
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-        params: { status, priority, page, limit },
+      if(auth.user.role === "admin" || auth.user.role === "agent"){
+        const response = await axios.get('https://servicenest-backend.onrender.com/tickets/all-tickets', {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+        params: {
+          status,
+          priority,
+          page,
+          limit,
+        },
       });
-
-      setTickets(response.data.tickets || []);
+        setTickets(response.data.tickets || []);
+      }
+      else{
+        const response = await axios.get('https://servicenest-backend.onrender.com/tickets/my-tickets', {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+        params: {
+          status,
+          priority,
+          page,
+          limit,
+        },
+      });
+        setTickets(response.data.tickets || []);
+      }
     } catch (err) {
       console.error('Failed to fetch tickets', err);
     }
@@ -44,20 +62,12 @@ function Ticket() {
 
   useEffect(() => {
     if (loading) return;
-    if (!auth?.isAuthenticated) {
+    if (!auth.isAuthenticated) {
       navigate('/login');
       return;
     }
     fetchTickets();
-  }, [
-    status,
-    priority,
-    page,
-    loading,
-    auth?.isAuthenticated,
-    auth?.token,
-    auth?.user?.role,
-  ]);
+  }, [status, priority, page, loading, auth]);
 
   const createTicket = async (e) => {
     e.preventDefault();
@@ -66,7 +76,9 @@ function Ticket() {
         'https://servicenest-backend.onrender.com/tickets/new',
         { subject, description, priority: newpriority },
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+          },
         }
       );
 
@@ -82,31 +94,23 @@ function Ticket() {
     }
   };
 
-  if (loading || !auth?.isAuthenticated) {
+  if (loading || !auth.isAuthenticated) {
     return <p className="text-center mt-5">Loading Tickets...</p>;
   }
 
   return (
     <>
-      <Container style={{ marginLeft: '151px' }}>
+      <Container style={{marginLeft:'151px'}}>
         <br />
         <div className="filters">
-          <select
-            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-            value={status}
-            className="filter"
-          >
+          <select onChange={(e) => { setStatus(e.target.value); setPage(1); }} value={status} className="filter">
             <option value="">All Statuses</option>
             <option value="open">Open</option>
             <option value="in_progress">In Progress</option>
             <option value="closed">Closed</option>
           </select>
 
-          <select
-            onChange={(e) => { setPriority(e.target.value); setPage(1); }}
-            value={priority}
-            className="filter"
-          >
+          <select onChange={(e) => { setPriority(e.target.value); setPage(1); }} value={priority} className="filter">
             <option value="">All Priorities</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -136,7 +140,7 @@ function Ticket() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tickets.map((ticket) => (
+                    {tickets.map((ticket, index) => (
                       <tr
                         key={ticket.id}
                         style={
@@ -147,11 +151,7 @@ function Ticket() {
                         }
                       >
                         <td>{ticket.id}</td>
-                        <td>
-                          <Link to={`/ticket/${ticket.id}`} className="ticket-link">
-                            {ticket.subject}
-                          </Link>
-                        </td>
+                        <td><Link to={`/ticket/${ticket.id}`} className="ticket-link">{ticket.subject}</Link></td>
                         <td>{ticket.description}</td>
                         <td>{ticket.status}</td>
                         <td>{ticket.priority}</td>
@@ -162,25 +162,21 @@ function Ticket() {
                   </tbody>
                 </table>
 
-                <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-                  <FontAwesomeIcon
-                    icon={faBackward}
-                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                    className="ms-2"
-                    style={{ cursor: 'pointer', opacity: page === 1 ? 0.5 : 1 }}
-                  />
-                  <span style={{ fontSize: "10px", margin: '0 10px' }}>Page {page}</span>
-                  <FontAwesomeIcon
-                    icon={faForward}
+                <div
+                  className="pagination-controls"
+                  style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}
+                >
+                   <FontAwesomeIcon icon={faBackward} onClick={() => setPage((prev) => Math.max(prev - 1, 1))} className="ms-2" style={{ cursor: 'pointer', opacity: page === 1 ? 0.5 : 1 }}/>
+                  <span style={{fontSize:"10px"}}>Page {page}</span>
+                    <FontAwesomeIcon icon={faForward} disabled={tickets.length < limit}
                     onClick={() => setPage((prev) => prev + 1)}
-                    className="ms-2"
-                    style={{ cursor: 'pointer', opacity: tickets.length < limit ? 0.5 : 1 }}
-                  />
+                    className="ms-2" />
                 </div>
               </>
             )}
           </div>
         </div>
+
 
         <Button className="floating-button" type="button" onClick={handleShow}>
           New Ticket
