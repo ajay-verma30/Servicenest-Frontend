@@ -1,0 +1,39 @@
+.details-container{
+    width: 100%;
+
+    border-radius: 10px;
+}
+
+.profile{
+    display: flex;
+    justify-content: center;
+    background-color: whitesmoke;
+}
+
+.profile-img{
+    border-radius: 400px !important;
+    height: 250px !important;
+    margin-top: -100px;
+}
+
+.details{
+    padding: 20px;
+    width: 74%;
+    background-color: whitesmoke;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+.image-container{
+    width: 24% !important;
+    margin-left: 1% !important;
+}
+
+.profile-content-container{
+    background: url('../../../public/Images/background.jpg');
+    height: 100vh;
+}
+
+.profile-container{
+    top: 100px;
+    position: relative;
+}

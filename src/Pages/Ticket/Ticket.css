@@ -1,0 +1,48 @@
+.floating-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  background-color: #2563eb; 
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.floating-button:hover {
+  background-color: #1d4ed8;
+}
+
+
+.filter:not(:first-child){
+    margin-left: 10px;
+}
+
+.action{
+    cursor: pointer;
+}
+
+.action:hover{
+    color: grey;
+}
+.highlight-red {
+  background-color: #f8d7da !important; /* Light red background */
+  color: #721c24; /* Optional: darker text for contrast */
+}
+
+.ticket-link {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.ticket-link:hover {
+  text-decoration: underline;
+}
+
+.specific-ticket{
+  margin-left:151px !important
+}
