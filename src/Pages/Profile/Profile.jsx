@@ -11,7 +11,7 @@ function Profile() {
   const { auth,loading  } = useContext(AuthContext);
   const [password, setPassword] = useState('');
 
-
+  console.log(auth);
   useEffect(() => {
     if (loading) return;
     if (!auth.isAuthenticated) {

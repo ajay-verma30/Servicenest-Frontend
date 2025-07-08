@@ -27,7 +27,8 @@ function Ticket() {
 
   const fetchTickets = async () => {
     try {
-      const response = await axios.get('https://servicenest-backend.onrender.com/tickets/my-tickets', {
+      if(auth.user.role === "admin" || auth.user.role === "agent"){
+        const response = await axios.get('https://servicenest-backend.onrender.com/tickets/all-tickets', {
         headers: {
           Authorization: `Bearer ${auth.token}`,
         },
@@ -38,7 +39,22 @@ function Ticket() {
           limit,
         },
       });
-      setTickets(response.data.tickets || []);
+        setTickets(response.data.tickets || []);
+      }
+      else{
+        const response = await axios.get('https://servicenest-backend.onrender.com/tickets/my-tickets', {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+        params: {
+          status,
+          priority,
+          page,
+          limit,
+        },
+      });
+        setTickets(response.data.tickets || []);
+      }
     } catch (err) {
       console.error('Failed to fetch tickets', err);
     }
@@ -150,11 +166,8 @@ function Ticket() {
                   className="pagination-controls"
                   style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}
                 >
-                   <FontAwesomeIcon icon={faBackward} disabled={tickets.length < limit}
-                    onClick={() => setPage((prev) => prev + 1)}
-                    className="ms-2" />
+                   <FontAwesomeIcon icon={faBackward} onClick={() => setPage((prev) => Math.max(prev - 1, 1))} className="ms-2" style={{ cursor: 'pointer', opacity: page === 1 ? 0.5 : 1 }}/>
                   <span style={{fontSize:"10px"}}>Page {page}</span>
-                  
                     <FontAwesomeIcon icon={faForward} disabled={tickets.length < limit}
                     onClick={() => setPage((prev) => prev + 1)}
                     className="ms-2" />
