@@ -19,7 +19,7 @@ function Profile() {
 
     const getDetails = async () => {
       try {
-        const result = await axios.get('http://localhost:3000/users/my-details', {
+        const result = await axios.get('https://servicenest-backend.onrender.com/users/my-details', {
           headers: {
             Authorization: `Bearer ${auth.token}`
           }

@@ -12,7 +12,7 @@ function Login() {
      const handleLogin = async(e) =>{
         e.preventDefault();
         try{
-            const result = await axios.post("http://localhost:3000/users/login", {email, password})
+            const result = await axios.post("https://servicenest-backend.onrender.com/users/login", {email, password})
             if(result.status === 200){
                 navigate('/opt-verification',{ state: { email } })
             }

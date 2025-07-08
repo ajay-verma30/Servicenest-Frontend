@@ -22,7 +22,7 @@ function Register() {
                 setTimeout(() => setErrMsg(""), 3000); 
                 return
             }
-            const result = await axios.post("http://localhost:3000/users/new", {f_name,l_name, email, password, role})
+            const result = await axios.post("https://servicenest-backend.onrender.com/users/new", {f_name,l_name, email, password, role})
             if(result.status === 201){
                 navigate('/login')
             }

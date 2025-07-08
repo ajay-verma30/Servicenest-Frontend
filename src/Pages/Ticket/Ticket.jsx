@@ -27,7 +27,7 @@ function Ticket() {
 
   const fetchTickets = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/tickets/my-tickets', {
+      const response = await axios.get('https://servicenest-backend.onrender.com/tickets/my-tickets', {
         headers: {
           Authorization: `Bearer ${auth.token}`,
         },
@@ -57,7 +57,7 @@ function Ticket() {
     e.preventDefault();
     try {
       const result = await axios.post(
-        'http://localhost:3000/tickets/new',
+        'https://servicenest-backend.onrender.com/tickets/new',
         { subject, description, priority: newpriority },
         {
           headers: {

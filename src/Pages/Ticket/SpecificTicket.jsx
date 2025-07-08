@@ -27,7 +27,7 @@ function SpecificTicket() {
 
     const fetchTicketData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/tickets/${id}`, {
+        const response = await axios.get(`https://servicenest-backend.onrender.com/tickets/${id}`, {
           headers: {
             Authorization: `Bearer ${auth.token}`
           }
@@ -44,7 +44,7 @@ function SpecificTicket() {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`http://localhost:3000/comments/comments?ticketId=${id}`, {
+      const response = await axios.get(`https://servicenest-backend.onrender.com/comments/comments?ticketId=${id}`, {
         headers: {
           Authorization: `Bearer ${auth.token}`
         }
@@ -67,7 +67,7 @@ function SpecificTicket() {
       const inInternal = type === 'internal';
 
       await axios.post(
-        'http://localhost:3000/comments/new',
+        'https://servicenest-backend.onrender.com/comments/new',
         {
           comment,
           inInternal,

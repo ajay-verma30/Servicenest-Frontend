@@ -40,7 +40,7 @@ function OtpVerification() {
     e.preventDefault();
     const finalOtp = otp.join('');
     try {
-      const res = await axios.post('http://localhost:3000/users/verify-otp', {
+      const res = await axios.post('https://servicenest-backend.onrender.com/users/verify-otp', {
         email,
         otp: finalOtp
       });

@@ -22,7 +22,7 @@ function Dashboard() {
 
     const ticketSummary = async () => {
       try {
-        const results = await axios.get('http://localhost:3000/tickets/my-tickets-summary', {
+        const results = await axios.get('https://servicenest-backend.onrender.com/tickets/my-tickets-summary', {
           headers: {
             Authorization: `Bearer ${auth.token}`
           }
