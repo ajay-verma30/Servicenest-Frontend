@@ -9,6 +9,8 @@ function Profile() {
   const navigate = useNavigate();
   const [detail, setDetail] = useState(null); 
   const { auth,loading  } = useContext(AuthContext);
+  const {password, setPassword} = useState('');
+
 
   useEffect(() => {
     if (loading) return;
@@ -33,6 +35,21 @@ function Profile() {
 
     getDetails();
   }, [auth, navigate, loading]);
+
+  const passwordReset =async(e)=>{
+    e.preventDefault()
+    try{
+      const result = await axios.put('https://servicenest-backend.onrender.com/users/reset',{password},{
+        headers:{
+          Authorization:`Bearer ${auth.token}`
+        }
+      })
+      console.log(result)
+    }
+    catch(e){
+      console.log(e)
+    }
+  }
 
   if (loading || !auth.isAuthenticated || detail === null) {
   return <p className="text-center mt-5">Loading profile...</p>;
@@ -83,10 +100,10 @@ function Profile() {
               </Form.Group>
             </Form>
             <hr />
-            <Form>
+            <Form onSubmit={passwordReset}>
               <Form.Group>
                 <Form.Label>Reset Password</Form.Label>
-                <Form.Control type='password' placeholder='Enter New Password' />
+                <Form.Control type='password' placeholder='Enter New Password' value={password} onChange={(e)=>setPassword(e.target.value)} />
               </Form.Group>
               <br />
               <Button className="btn btn-success" type="submit">Reset</Button>
