@@ -44,7 +44,9 @@ function Profile() {
           Authorization:`Bearer ${auth.token}`
         }
       })
-      console.log(result)
+      if (result.status === 200){
+        setPassword(" ")
+      }
     }
     catch(e){
       console.log(e)
