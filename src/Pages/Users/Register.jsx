@@ -72,7 +72,8 @@ function Register() {
                         <Form.Select value={role} onChange={(e) => setRole(e.target.value)}>
                             <option value="">Select Account Type</option>
                             <option value="user">User</option>
-                            <option value="auditor">Auditor</option>
+                            <option value="admin">Admin</option>
+                            <option value="agent">Agent</option>
                         </Form.Select>
                     </Form.Group>
                     <Form.Group className="checkbox-class">
