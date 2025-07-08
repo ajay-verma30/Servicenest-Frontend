@@ -9,7 +9,7 @@ function Profile() {
   const navigate = useNavigate();
   const [detail, setDetail] = useState(null); 
   const { auth,loading  } = useContext(AuthContext);
-  const {password, setPassword} = useState('');
+  const [password, setPassword] = useState('');
 
 
   useEffect(() => {
