@@ -1,12 +1,16 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../../Context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import {analytics} from '../../Context/Analytics'
 
 const TopBar = () => {
   const navigate = useNavigate();
-  const {logout} = useContext(AuthContext);
+  const {auth,logout} = useContext(AuthContext);
   const handleLogout=(e)=>{
     e.preventDefault();
+    analytics.track('Logout',{
+      email: auth.email
+    })
     logout();
     navigate("/login")
   }

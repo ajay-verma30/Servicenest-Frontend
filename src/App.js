@@ -8,7 +8,6 @@ import Dashboard from './Pages/Dashboard/Dashboard';
 import Profile from './Pages/Profile/Profile';
 import Ticket from './Pages/Ticket/Ticket';
 import SpecificTicket from './Pages/Ticket/SpecificTicket';
-
 function App() {
   return (
     <div className="App">
