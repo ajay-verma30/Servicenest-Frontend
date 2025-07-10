@@ -56,8 +56,8 @@ function Dashboard() {
               <Card>
                 <Card.Header>
                   <Row>
-                    <Col xs={4} md={2} className='pending-icon-container'>
-                      <FontAwesomeIcon icon={faClock} className='pending-icon' />
+                    <Col xs={4} md={2} className='engagement-icon-container '>
+                    <FontAwesomeIcon icon={faListUl} className='engagement-icon' />
                     </Col>
                     <Col xs={8} md={10}>
                       <h4>Total Open</h4>
@@ -71,8 +71,8 @@ function Dashboard() {
               <Card>
                 <Card.Header>
                   <Row>
-                    <Col xs={4} md={2} className='engagement-icon-container'>
-                      <FontAwesomeIcon icon={faListUl} className='engagement-icon' />
+                    <Col xs={4} md={2} className='pending-icon-container'>
+                      <FontAwesomeIcon icon={faClock} className='pending-icon' />
                     </Col>
                     <Col xs={8} md={10}>
                       <h4>High Priority</h4>

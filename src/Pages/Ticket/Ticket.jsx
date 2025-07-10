@@ -5,21 +5,22 @@ import { AuthContext } from '../../Context/AuthContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; 
-import { faPencil,faForward,faBackward } from '@fortawesome/free-solid-svg-icons';
-import { Link } from 'react-router-dom';
+import { faForward,faBackward } from '@fortawesome/free-solid-svg-icons';
+import { Link, useSearchParams } from 'react-router-dom';
 
 function Ticket() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const { auth, loading } = useContext(AuthContext);
   const [errMsg, setErrMsg] = useState('');
-  const [status, setStatus] = useState('');
-  const [priority, setPriority] = useState('');
+  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [priority, setPriority] = useState(searchParams.get('priority') || '');
+  const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
   const [tickets, setTickets] = useState([]);
   const [newpriority, setnewPriority] = useState('');
-  const [page, setPage] = useState(1);
   const limit = 10;
 
   const handleClose = () => setShow(false);
@@ -94,6 +95,24 @@ function Ticket() {
     }
   };
 
+
+  //url Parameters update
+  const updateSearchParams = (newParams) => {
+  const updatedParams = {
+    status,
+    priority,
+    page,
+    ...newParams,
+  };
+
+  // remove empty keys
+  Object.keys(updatedParams).forEach((key) => {
+    if (!updatedParams[key]) delete updatedParams[key];
+  });
+
+  setSearchParams(updatedParams);
+};
+
   if (loading || !auth.isAuthenticated) {
     return <p className="text-center mt-5">Loading Tickets...</p>;
   }
@@ -103,14 +122,14 @@ function Ticket() {
       <Container style={{marginLeft:'151px'}}>
         <br />
         <div className="filters">
-          <select onChange={(e) => { setStatus(e.target.value); setPage(1); }} value={status} className="filter">
+          <select onChange={(e) => {setStatus(e.target.value); setPage(1); updateSearchParams({ status: e.target.value, page: 1 });}} value={status}>
             <option value="">All Statuses</option>
             <option value="open">Open</option>
             <option value="in_progress">In Progress</option>
             <option value="closed">Closed</option>
           </select>
 
-          <select onChange={(e) => { setPriority(e.target.value); setPage(1); }} value={priority} className="filter">
+          <select onChange={(e) => { setPriority(e.target.value); setPage(1); updateSearchParams({ priority: e.target.value, page: 1 }); }} value={priority}>
             <option value="">All Priorities</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -166,11 +185,9 @@ function Ticket() {
                   className="pagination-controls"
                   style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}
                 >
-                   <FontAwesomeIcon icon={faBackward} onClick={() => setPage((prev) => Math.max(prev - 1, 1))} className="ms-2" style={{ cursor: 'pointer', opacity: page === 1 ? 0.5 : 1 }}/>
+                   <FontAwesomeIcon icon={faBackward} onClick={() => {const newPage = Math.max(page - 1, 1); setPage(newPage); updateSearchParams({ page: newPage });}}/>
                   <span style={{fontSize:"10px"}}>Page {page}</span>
-                    <FontAwesomeIcon icon={faForward} disabled={tickets.length < limit}
-                    onClick={() => setPage((prev) => prev + 1)}
-                    className="ms-2" />
+                    <FontAwesomeIcon icon={faForward} onClick={() => { const newPage = page + 1; setPage(newPage); updateSearchParams({ page: newPage }); }}/>
                 </div>
               </>
             )}

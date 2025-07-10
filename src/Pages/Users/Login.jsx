@@ -22,9 +22,6 @@ function Login() {
             setTimeout(() => setErrMsg(""), 3000); 
         }
      }
-     const handleRegisterRoute = () =>{
-        navigate('/register')
-     }
   return (
     <>
         <div className="content-container">
@@ -42,7 +39,6 @@ function Login() {
                     <Button className='btn' type='submit'>Login</Button>
                 </Form>
                 <br/>
-                <p onClick={handleRegisterRoute}>New User?<span className='text-danger' style={{cursor:"pointer"}}> Sign Up.</span></p>
                 {errMsg && <p style={{ color: "red", marginTop: "10px" }}>{errMsg}</p>}
             </Container>
         </div>

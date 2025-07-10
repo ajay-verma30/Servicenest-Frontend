@@ -14,13 +14,13 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path='/register' element={<Register/>}></Route>
           <Route path='/login' element={<Login/>}></Route>
           <Route path="/opt-verification" element={<OtpVerification/>}></Route>
             <Route path="/home" element={<MainLayout><Dashboard /></MainLayout>} />
             <Route path="/my-profile" element={<MainLayout><Profile /></MainLayout>} />
             <Route path="/tickets" element={<MainLayout><Ticket /></MainLayout>} />
             <Route path="/ticket/:id" element={<MainLayout><SpecificTicket/></MainLayout>} />
+            <Route path="/add-new" element={<MainLayout><Register/></MainLayout>} />
         </Routes>
       </Router>
     </div>
