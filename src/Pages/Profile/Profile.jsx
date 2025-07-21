@@ -61,7 +61,6 @@ function Profile() {
     <div className="profile-content-container" style={{marginLeft:'151px'}}>
     <Container className='profile-container'>
       <h1>Hello {detail.f_name}</h1>
-      <p>This is your profile page. You can view your details, reset your password, set your profile image, or enable Dark Mode.</p>
       <div className="details-container">
         <Row>
           <Col xs={12} md={9} className='details'>

@@ -105,7 +105,7 @@ function Ticket() {
     ...newParams,
   };
 
-  // remove empty keys
+
   Object.keys(updatedParams).forEach((key) => {
     if (!updatedParams[key]) delete updatedParams[key];
   });
@@ -129,7 +129,7 @@ function Ticket() {
             <option value="closed">Closed</option>
           </select>
 
-          <select onChange={(e) => { setPriority(e.target.value); setPage(1); updateSearchParams({ priority: e.target.value, page: 1 }); }} value={priority}>
+          <select style={{marginLeft:"10px"}} onChange={(e) => { setPriority(e.target.value); setPage(1); updateSearchParams({ priority: e.target.value, page: 1 }); }} value={priority}>
             <option value="">All Priorities</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -186,7 +186,7 @@ function Ticket() {
                   style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}
                 >
                    <FontAwesomeIcon icon={faBackward} onClick={() => {const newPage = Math.max(page - 1, 1); setPage(newPage); updateSearchParams({ page: newPage });}}/>
-                  <span style={{fontSize:"10px"}}>Page {page}</span>
+                  <span style={{fontSize:"10px"}}>&nbsp;&nbsp;{page}&nbsp;&nbsp;</span>
                     <FontAwesomeIcon icon={faForward} onClick={() => { const newPage = page + 1; setPage(newPage); updateSearchParams({ page: newPage }); }}/>
                 </div>
               </>

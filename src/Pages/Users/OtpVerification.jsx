@@ -4,6 +4,7 @@ import axios from 'axios';
 import './Common.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../Context/AuthContext';
+import { analytics } from '../../Context/Analytics';
 
 function OtpVerification() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -47,8 +48,14 @@ function OtpVerification() {
       setSuccessMsg(res.data.message);
       setErrMsg('');
 
-      login(res.data.token); 
+      analytics.identify(email,{
+        verified: true,
+        method: "Otp Login"
+      })
+      
 
+      login(res.data.token); 
+      
       navigate('/home');
     } catch (error) {
       const msg = error.response?.data?.message || 'OTP verification failed';

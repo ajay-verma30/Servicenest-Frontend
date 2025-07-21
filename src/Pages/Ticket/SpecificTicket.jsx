@@ -22,6 +22,8 @@ function SpecificTicket() {
     }
   }, [auth, navigate, loading]);
 
+
+
   useEffect(() => {
     if (!auth.isAuthenticated || loading) return;
 
@@ -171,20 +173,31 @@ function SpecificTicket() {
           </Form.Group>
           <br />
           <Row>
-            <Col md={2}>
-              <Form.Group>
-                <Form.Select value={type} onChange={(e) => setType(e.target.value)}>
-                  <option value="">--Comment Type--</option>
-                  <option value="internal">Internal</option>
-                  <option value="external">External</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={2}>
-              <Button type="submit" className="btn-success">
-                Submit
-              </Button>
-            </Col>
+            {auth.user.role === "admin" || auth.user.role === "agent" ? (
+  <>
+    <Col md={2}>
+      <Form.Group>
+        <Form.Select value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="">--Comment Type--</option>
+          <option value="internal">Internal</option>
+          <option value="external">External</option>
+        </Form.Select>
+      </Form.Group>
+    </Col>
+    <Col md={2}>
+      <Button type="submit" className="btn-success">
+        Submit
+      </Button>
+    </Col>
+  </>
+) : (
+  <Col md={2}>
+    <Button type="submit" className="btn-success">
+      Submit
+    </Button>
+  </Col>
+)}
+
           </Row>
         </Form>
 
@@ -197,9 +210,11 @@ function SpecificTicket() {
               <Row>
                 <Col md={8}>
                   <p>{c.comment}</p>
-                  <span className={`badge ${c.inInternal ? 'bg-secondary' : 'bg-info text-dark'}`}>
-                  {c.inInternal ? 'Internal' : 'External'}
-              </span>
+                  {(auth.user.role === "admin" || auth.user.role === "agent") && (
+  <span className={`badge ${c.inInternal ? 'bg-secondary' : 'bg-info text-dark'}`}>
+    {c.inInternal ? 'Internal' : 'External'}
+  </span>
+)}
                 </Col>
                 <Col md={4}>
                      <p><strong>{c.commented_by}</strong> ({new Date(c.created_at).toLocaleString()})</p>
