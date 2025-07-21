@@ -203,26 +203,31 @@ function SpecificTicket() {
 
         <hr />
         {comments.length === 0 ? (
-          <p>No comments yet.</p>
-        ) : (
-          comments.map((c) => (
-            <div key={c.commentId} className="comment-block mb-3 p-3 bg-light rounded">
-              <Row>
-                <Col md={8}>
-                  <p>{c.comment}</p>
-                  {(auth.user.role === "admin" || auth.user.role === "agent") && (
-  <span className={`badge ${c.inInternal ? 'bg-secondary' : 'bg-info text-dark'}`}>
-    {c.inInternal ? 'Internal' : 'External'}
-  </span>
+  <p>No comments yet.</p>
+) : (
+  comments
+    .filter(c => !(c.inInternal && auth.user.role === "user")) 
+    .map((c) => (
+      <div key={c.commentId} className="comment-block mb-3 p-3 bg-light rounded">
+        <Row>
+          <Col md={8}>
+            <p>{c.comment}</p>
+            {(auth.user.role === "admin" || auth.user.role === "agent") && (
+              <span className={`badge ${c.inInternal ? 'bg-secondary' : 'bg-info text-dark'}`}>
+                {c.inInternal ? 'Internal' : 'External'}
+              </span>
+            )}
+          </Col>
+          <Col md={4}>
+            <p>
+              <strong>{c.commented_by}</strong> ({new Date(c.created_at).toLocaleString()})
+            </p>
+          </Col>
+        </Row>
+      </div>
+    ))
 )}
-                </Col>
-                <Col md={4}>
-                     <p><strong>{c.commented_by}</strong> ({new Date(c.created_at).toLocaleString()})</p>
-                </Col>
-              </Row>
-            </div>
-          ))
-        )}
+
       </Container>
     </div>
   );
