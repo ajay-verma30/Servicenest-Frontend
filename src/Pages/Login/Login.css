@@ -1,0 +1,17 @@
+.login-page-container{
+    height: 100vh !important;
+    overflow-x: hidden !important;
+    background-color: rgb(248, 222, 222) !important;
+}
+
+.login-form{
+    padding-top: 5%;
+    padding-left: 20%;
+    padding-right: 20%;
+    margin-top: 20%;
+}
+
+.login-image{
+    margin-top: -350px;
+    height: 100% !important;
+}

@@ -1,0 +1,56 @@
+
+
+.section-one{
+    position: relative;
+}
+
+.hero-content{
+    background-color: rgb(238, 235, 235);
+    padding: 5%;
+}
+
+.hero-content h1{
+    font-size: 4em !important;
+    font-weight: bold;
+}
+
+.hero-highlight{
+    background: linear-gradient(135deg, #4facfe 0%, #cae4f5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    font-weight: bold;
+    
+}
+
+.hero-content h5{
+    font-weight: 400;
+    color: #747373 !important;
+}
+
+.login{
+    background-color: rgb(64, 64, 253);
+    padding-left: 30px;
+    padding-right: 30px;
+    margin-right: 10px;
+    border-radius: 20px;
+}
+
+.login:hover{
+    background-color: rgb(31, 31, 197);
+}
+.contact{
+    border-radius: 20px;
+    background-color: rgb(126, 126, 126) !important;
+    padding-left: 25px;
+    padding-right: 25px;
+    color: black;
+    border-color: transparent !important;
+}
+
+.contact:hover{
+    background-color: rgb(161, 161, 161) !important;
+    color: black;
+    border-color: transparent !important;
+}
