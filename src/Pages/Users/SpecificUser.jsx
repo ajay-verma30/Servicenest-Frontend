@@ -10,7 +10,7 @@ import axios from "axios";
 function SpecificUser() {
   const { orgId, id } = useParams();
   const { accessToken } = useAuth();
-  const [user, setUser] = useState(null);
+  const [specUser, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setError] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
@@ -29,8 +29,8 @@ const [selectedTeam, setSelectedTeam] = useState("");
           setError("User not found");
         }
       } catch (error) {
-        console.error("Failed to fetch user:", error);
-        setError(error.response?.data?.error || "Failed to load user details");
+        console.error("Failed to fetch specUser:", error);
+        setError(error.response?.data?.error || "Failed to load specUser details");
       } finally {
         setLoading(false);
       }
@@ -64,7 +64,7 @@ const [selectedTeam, setSelectedTeam] = useState("");
     switch (role?.toLowerCase()) {
       case "admin": return "danger";
       case "manager": return "warning";
-      case "user": return "info";
+      case "specUser": return "info";
       case "moderator": return "primary";
       default: return "secondary";
     }
@@ -84,12 +84,12 @@ const [selectedTeam, setSelectedTeam] = useState("");
         }
       );
       setActionMessage({ type: "success", text: "User disabled successfully" });
-      setUser({ ...user, status: "inactive" });
+      setUser({ ...specUser, status: "inactive" });
     } catch (error) {
-      console.error("Failed to disable user:", error);
+      console.error("Failed to disable specUser:", error);
       setActionMessage({
         type: "danger",
-        text: error.response?.data?.error || "Failed to disable user",
+        text: error.response?.data?.error || "Failed to disable specUser",
       });
     }
   };
@@ -125,7 +125,7 @@ const handleSaveTeam = async () => {
       );
       setActionMessage({ type: "success", text: "Team updated successfully" });
       const selectedTeamTitle = teams.find((t) => t.id === parseInt(selectedTeam))?.title;
-      setUser({ ...user, team_title: selectedTeamTitle });
+      setUser({ ...specUser, team_title: selectedTeamTitle });
       window.location.reload();
     } catch (error) {
       console.error("Failed to update team:", error);
@@ -153,7 +153,7 @@ const handleSaveTeam = async () => {
                 variant="primary" 
                 style={{ width: "3rem", height: "3rem" }}
               />
-              <p className="mt-3 text-muted">Loading user details...</p>
+              <p className="mt-3 text-muted">Loading specUser details...</p>
             </div>
           </Col>
         </Row>
@@ -182,7 +182,7 @@ const handleSaveTeam = async () => {
     );
   }
 
-  if (!user) {
+  if (!specUser) {
     return (
       <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
         <Topbar />
@@ -203,7 +203,7 @@ const handleSaveTeam = async () => {
                     <Person size={48} className="text-muted" />
                   </div>
                   <h4 className="text-danger mb-2">User Not Found</h4>
-                  <p className="text-muted">The requested user could not be found or you don't have permission to view this user.</p>
+                  <p className="text-muted">The requested specUser could not be found or you don't have permission to view this specUser.</p>
                 </Card.Body>
               </Card>
             </Container>
@@ -231,7 +231,7 @@ const handleSaveTeam = async () => {
                   <a href="/users" className="text-decoration-none">Users</a>
                 </li>
                 <li className="breadcrumb-item active" aria-current="page">
-                  {user.full_name}
+                  {specUser.full_name}
                 </li>
               </ol>
             </nav>
@@ -246,26 +246,26 @@ const handleSaveTeam = async () => {
         className="rounded-circle bg-white bg-opacity-25 backdrop-blur d-flex align-items-center justify-content-center me-4 shadow"
         style={{ width: 80, height: 80, fontSize: "2rem", fontWeight: "bold" }}
       >
-        {user.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
+        {specUser.full_name ? specUser.full_name.charAt(0).toUpperCase() : "U"}
       </div>
 
 
       <div>
-        <h2 className="mb-2 fw-bold">{user.full_name || "Unknown User"}</h2>
+        <h2 className="mb-2 fw-bold">{specUser.full_name || "Unknown User"}</h2>
         <div className="d-flex align-items-center mb-2">
           <Envelope size={16} className="me-2" />
-          <span className="me-4">{user.email}</span>
+          <span className="me-4">{specUser.email}</span>
         </div>
         <div className="d-flex gap-2">
           <Badge
-            bg={getRoleVariant(user.role)}
+            bg={getRoleVariant(specUser.role)}
             className="px-3 py-2 text-uppercase fw-semibold"
             style={{ fontSize: "0.75rem", letterSpacing: "0.5px" }}
           >
-            {user.role}
+            {specUser.role}
           </Badge>
           <Badge
-            bg={getStatusVariant(user.status)}
+            bg={getStatusVariant(specUser.status)}
             className="px-3 py-2 fw-semibold"
             style={{ fontSize: "0.75rem", letterSpacing: "0.5px" }}
           >
@@ -274,10 +274,10 @@ const handleSaveTeam = async () => {
               style={{
                 width: "8px",
                 height: "8px",
-                backgroundColor: user.status === "active" ? "#fff" : "#ccc",
+                backgroundColor: specUser.status === "active" ? "#fff" : "#ccc",
               }}
             ></div>
-            {user.status}
+            {specUser.status}
           </Badge>
         </div>
       </div>
@@ -287,7 +287,7 @@ const handleSaveTeam = async () => {
   variant="danger"
   className="fw-semibold shadow-sm"
   onClick={handleDisable}
-  disabled={user.status === "suspended"}
+  disabled={specUser.status === "suspended"}
 >
   Disable User
 </Button>
@@ -313,7 +313,7 @@ const handleSaveTeam = async () => {
                           <Person size={18} className="text-primary me-3" />
                           <div>
                             <small className="text-muted d-block">Full Name</small>
-                            <strong>{user.full_name || "N/A"}</strong>
+                            <strong>{specUser.full_name || "N/A"}</strong>
                           </div>
                         </div>
                       </div>
@@ -322,7 +322,7 @@ const handleSaveTeam = async () => {
                           <Phone size={18} className="text-success me-3" />
                           <div>
                             <small className="text-muted d-block">Contact</small>
-                            <strong>{user.contact || "N/A"}</strong>
+                            <strong>{specUser.contact || "N/A"}</strong>
                           </div>
                         </div>
                       </div>
@@ -331,7 +331,7 @@ const handleSaveTeam = async () => {
                           <Envelope size={18} className="text-info me-3" />
                           <div>
                             <small className="text-muted d-block">Email Address</small>
-                            <strong>{user.email}</strong>
+                            <strong>{specUser.email}</strong>
                           </div>
                         </div>
                       </div>
@@ -347,8 +347,8 @@ const handleSaveTeam = async () => {
                   <People size={18} className="text-primary me-3" />
                   <div className="flex-grow-1">
                     <small className="text-muted d-block">Team</small>
-                    {user.team_title ? (
-                      <strong>{user.team_title}</strong>
+                    {specUser.team_title ? (
+                      <strong>{specUser.team_title}</strong>
                     ) : (
                       <Form.Select
                         size="sm"
@@ -364,7 +364,7 @@ const handleSaveTeam = async () => {
                       </Form.Select>
                     )}
                   </div>
-                  {!user.team_title && (
+                  {!specUser.team_title && (
                     <Button className="ms-3" variant="primary" size="sm" onClick={handleSaveTeam}>
                       Save Changes
                     </Button>
@@ -387,21 +387,21 @@ const handleSaveTeam = async () => {
                   <div className="col-md-4">
                     <div className="text-center p-4 bg-success bg-opacity-10 rounded-3 h-100">
                       <h6 className="text-success mb-1">Last Login</h6>
-                      <p className="mb-0 fw-semibold">{formatDate(user.last_login_at)}</p>
+                      <p className="mb-0 fw-semibold">{formatDate(specUser.last_login_at)}</p>
                     </div>
                   </div>
                   <div className="col-md-4">
                     <div className="text-center p-4 bg-primary bg-opacity-10 rounded-3 h-100">
 
                       <h6 className="text-primary mb-1">Account Created</h6>
-                      <p className="mb-0 fw-semibold">{formatDate(user.created_at)}</p>
+                      <p className="mb-0 fw-semibold">{formatDate(specUser.created_at)}</p>
                     </div>
                   </div>
                   <div className="col-md-4">
                     <div className="text-center p-4 bg-warning bg-opacity-10 rounded-3 h-100">
-                      <i className="fas fa-user-edit text-warning mb-3" style={{ fontSize: "2rem" }}></i>
+                      <i className="fas fa-specUser-edit text-warning mb-3" style={{ fontSize: "2rem" }}></i>
                       <h6 className="text-warning mb-1">Last Updated</h6>
-                      <p className="mb-0 fw-semibold">{formatDate(user.updated_at)}</p>
+                      <p className="mb-0 fw-semibold">{formatDate(specUser.updated_at)}</p>
                     </div>
                   </div>
                 </div>

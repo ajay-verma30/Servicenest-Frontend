@@ -15,3 +15,77 @@
     margin-top: -350px;
     height: 100% !important;
 }
+
+@keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .login-container {
+          animation: fadeInUp 0.8s ease-out;
+        }
+
+        .floating-shape-1 {
+          top: 10%;
+          left: 10%;
+          width: 80px;
+          height: 80px;
+          animation-delay: 0s;
+        }
+
+        .floating-shape-2 {
+          top: 20%;
+          right: 10%;
+          width: 60px;
+          height: 60px;
+          animation-delay: 2s;
+        }
+
+        .floating-shape-3 {
+          bottom: 20%;
+          left: 5%;
+          width: 100px;
+          height: 100px;
+          animation-delay: 4s;
+        }
+
+        .floating-shape-4 {
+          bottom: 10%;
+          right: 15%;
+          width: 70px;
+          height: 70px;
+          animation-delay: 1s;
+        }
+
+        .image-container {
+          position: relative;
+          overflow: hidden;
+          border-radius: 24px;
+        }
+
+        .image-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(45deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 2rem;
+          font-weight: bold;
+          text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }

@@ -9,6 +9,8 @@ function Sidebar() {
   const { user } = useAuth();
   const orgId = user?.orgId;
 
+  const isAdminOrAgent = user?.role === "admin" || user?.role === "agent";
+
   return (
     <div className="sidebar">
       <Link className="btn sidebar-menu" to={`/${orgId}/dashboard`}>
@@ -23,11 +25,23 @@ function Sidebar() {
       </Link>
       <br />
 
-      {user?.role === "admin" && (
+      {isAdminOrAgent && (
         <>
           <Link className="btn sidebar-menu" to={`/${orgId}/users`}>
             <FontAwesomeIcon icon={faUsers} className="me-2" />
             Users
+          </Link>
+          <br />
+
+          <Link className="btn sidebar-menu" to={`/${orgId}/teams`}>
+            <FontAwesomeIcon icon={faUsers} className="me-2" />
+            Teams
+          </Link>
+          <br />
+
+          <Link className="btn sidebar-menu" to={`/${orgId}/developers`}>
+            <FontAwesomeIcon icon={faCode} className="me-2" />
+            Developers
           </Link>
           <br />
         </>
@@ -38,16 +52,6 @@ function Sidebar() {
         Knowledge Base
       </Link>
       <br />
-
-      {user?.role === "admin" && (
-        <>
-          <Link className="btn sidebar-menu" to={`/${orgId}/developers`}>
-            <FontAwesomeIcon icon={faCode} className="me-2" />
-            Developers
-          </Link>
-          <br />
-        </>
-      )}
     </div>
   );
 }

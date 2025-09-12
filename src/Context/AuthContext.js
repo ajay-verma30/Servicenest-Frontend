@@ -21,15 +21,12 @@ export const AuthProvider = ({ children }) => {
   const isRefreshingRef = useRef(false);
   const failedQueueRef = useRef([]);
 
-  // Base axios instance
   const api = axios.create({
     baseURL: "http://localhost:3000",
-    withCredentials: true, // ensures refreshToken cookie is sent
+    withCredentials: true,
+    timeout: 10000, 
   });
 
-  /** -----------------
-   * Utility Functions
-   ------------------*/
 
   const clearRefreshTimeout = () => {
     if (refreshTimeoutRef.current) {
@@ -57,15 +54,17 @@ export const AuthProvider = ({ children }) => {
       const currentTime = Date.now();
       const timeUntilExpiry = expiryTime - currentTime;
 
-      // Refresh 2 minutes before expiry (but at least 30s from now)
       const refreshTime = Math.max(timeUntilExpiry - 2 * 60 * 1000, 30 * 1000);
+
+      console.log(`Token expires in ${timeUntilExpiry/1000}s, refreshing in ${refreshTime/1000}s`);
 
       if (refreshTime > 0) {
         refreshTimeoutRef.current = setTimeout(() => {
+          console.log("Scheduled refresh triggered");
           refreshToken();
         }, refreshTime);
       } else {
-        // Token already expired or expiring very soon
+        console.log("Token expired/expiring soon, refreshing immediately");
         refreshToken();
       }
     } catch (err) {
@@ -74,9 +73,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /** -----------------
-   * Axios Interceptors
-   ------------------*/
 
   api.interceptors.request.use(
     (config) => {
@@ -95,8 +91,9 @@ export const AuthProvider = ({ children }) => {
       const originalRequest = error.config;
 
       if (error.response?.status === 401 && !originalRequest._retry) {
+        console.log("401 response received, attempting token refresh");
+        
         if (isRefreshingRef.current) {
-          // Queue requests until refresh completes
           return new Promise((resolve, reject) => {
             failedQueueRef.current.push({ resolve, reject });
           })
@@ -117,6 +114,7 @@ export const AuthProvider = ({ children }) => {
             return api(originalRequest);
           }
         } catch (err) {
+          console.error("Refresh failed in interceptor:", err);
           processQueue(err, null);
           logout();
           return Promise.reject(err);
@@ -127,9 +125,6 @@ export const AuthProvider = ({ children }) => {
     }
   );
 
-  /** -----------------
-   * Auth Initialization
-   ------------------*/
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -138,15 +133,26 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const decoded = jwtDecode(token);
-          if (decoded.exp * 1000 < Date.now() + 60 * 1000) {
-            // Token expired or near expiry → try refresh
+          const isExpired = decoded.exp * 1000 < Date.now();
+          const isNearExpiry = decoded.exp * 1000 < Date.now() + 60 * 1000;
+          
+          console.log("Token initialization:", {
+            isExpired,
+            isNearExpiry,
+            expiresAt: new Date(decoded.exp * 1000),
+            now: new Date()
+          });
+
+          if (isExpired || isNearExpiry) {
+            console.log("Token expired/near expiry, attempting refresh");
             const newToken = await refreshToken();
             if (!newToken) {
+              console.log("Refresh failed during initialization, logging out");
               logout();
               return;
             }
           } else {
-            // Token is valid
+            console.log("Token is valid, setting user state");
             setUser({
               id: decoded.userId,
               email: decoded.email,
@@ -160,6 +166,8 @@ export const AuthProvider = ({ children }) => {
           console.error("Invalid token on load:", err);
           logout();
         }
+      } else {
+        console.log("No token found in localStorage");
       }
       setLoading(false);
     };
@@ -171,20 +179,27 @@ export const AuthProvider = ({ children }) => {
     return () => clearRefreshTimeout();
   }, []);
 
-  /** -----------------
-   * Core Auth Functions
-   ------------------*/
 
   const refreshToken = async () => {
-    if (isRefreshingRef.current) return null;
+    if (isRefreshingRef.current) {
+      console.log("Refresh already in progress, skipping");
+      return null;
+    }
+    
     isRefreshingRef.current = true;
+    console.log("Starting token refresh");
 
     try {
       const res = await axios.post(
         "http://localhost:3000/user/refresh-token",
         {},
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          timeout: 10000
+        }
       );
+
+      console.log("Refresh response:", res.data);
 
       if (res.data.success && res.data.accessToken) {
         const newToken = res.data.accessToken;
@@ -192,21 +207,30 @@ export const AuthProvider = ({ children }) => {
         setAccessToken(newToken);
 
         const decoded = jwtDecode(newToken);
-        setUser({
+        const userData = {
           id: decoded.userId,
           email: decoded.email,
           role: decoded.role,
           orgId: decoded.userOrg,
-        });
-
+        };
+        
+        setUser(userData);
         scheduleTokenRefresh(newToken);
+        console.log("Token refresh successful");
         return newToken;
       } else {
-        throw new Error("Invalid refresh response");
+        throw new Error("Invalid refresh response structure");
       }
     } catch (err) {
-      console.error("Refresh failed:", err.response?.data || err.message);
-      logout(); // ensure user session is cleared
+      console.error("Refresh failed:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      
+      if (err.response?.status === 401 || err.message.includes('timeout')) {
+        logout();
+      }
       return null;
     } finally {
       isRefreshingRef.current = false;
@@ -215,9 +239,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log("Attempting login");
       const res = await api.post("/user/login", { email, password });
 
-      if (res.data.token) {
+      console.log("Login response:", res.data);
+
+      if (res.data.success && res.data.token) {
         localStorage.setItem("token", res.data.token);
         setAccessToken(res.data.token);
 
@@ -232,13 +259,17 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         scheduleTokenRefresh(res.data.token);
 
+        console.log("Login successful, navigating to dashboard");
         navigate(`/${decoded.userOrg}/dashboard`);
         return { success: true, user: userData };
       } else {
-        throw new Error("No token received from login");
+        throw new Error("No token received from login or login failed");
       }
     } catch (err) {
-      console.error("Login failed:", err);
+      console.error("Login failed:", {
+        message: err.message,
+        response: err.response?.data
+      });
       return {
         success: false,
         message:
@@ -248,8 +279,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    console.log("Starting logout process");
+    
     try {
-      await axios.post("http://localhost:3000/user/logout", {}, { withCredentials: true });
+      await axios.post(
+        "http://localhost:3000/user/logout", 
+        {}, 
+        { 
+          withCredentials: true,
+          timeout: 5000
+        }
+      );
+      console.log("Logout request successful");
     } catch (err) {
       console.log("Logout request failed:", err.message);
     }
@@ -260,6 +301,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     setAccessToken(null);
     setUser(null);
+    console.log("Local state cleared, navigating to login");
     navigate("/login");
   };
 
@@ -269,8 +311,15 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const decoded = jwtDecode(token);
-      return decoded.exp * 1000 > Date.now();
-    } catch {
+      const isValid = decoded.exp * 1000 > Date.now();
+      console.log("Token validity check:", {
+        isValid,
+        expiresAt: new Date(decoded.exp * 1000),
+        now: new Date()
+      });
+      return isValid;
+    } catch (err) {
+      console.error("Error checking token validity:", err);
       return false;
     }
   };

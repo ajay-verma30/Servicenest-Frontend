@@ -1,0 +1,15 @@
+.new-ticket-container {
+  font-size: 0.9rem; /* slightly smaller than default */
+}
+
+.new-ticket-container .form-label {
+  font-size: 0.85rem; /* labels slightly smaller */
+}
+
+.new-ticket-container .form-control {
+  font-size: 0.9rem;
+}
+
+.new-ticket-container button {
+  font-size: 0.9rem;
+}

@@ -2,17 +2,15 @@ import React, { useEffect, useState } from 'react'
 import Topbar from '../../Components/Topbar/Topbar'
 import { Row, Col, Container, Form, Button } from 'react-bootstrap'
 import Sidebar from '../../Components/SideBar/Sidebar'
-import './Tickets.css'
 import axios from 'axios'
+import { useParams } from 'react-router-dom'
 import { useAuth } from '../../Context/AuthContext'
+import './Team.css'
 
 function CreateTicket() {
   const { accessToken, user } = useAuth()
-  const [type, setType] = useState('')
-  const [priority, setPriority] = useState('')
-  const [title, setSubject] = useState('')
+  const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [attachment, setAttachment] = useState(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
 
@@ -26,39 +24,27 @@ const handleSubmit = async (e) => {
 
   const created_by = user.id;
   const organization_id = user.orgId;
+  console.log(organization_id)
 
   try {
-
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("type", type);
-    formData.append("priority", priority);
-    formData.append("created_by", created_by);
-    formData.append("organization_id", organization_id);
-    
-    if (attachment) {
-      formData.append("attachment", attachment);
-    }
-
     const result = await axios.post(
-      "http://localhost:3000/tickets/new",
-      formData,
+      "http://localhost:3000/teams/new",
+      {
+        title,
+        description,
+        organization_id,
+        created_by
+      },
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "multipart/form-data", 
         },
       }
     );
 
     if (result.status === 201) {
-      setSubject("");
-      setPriority("");
-      setType("");
+      setTitle("");
       setDescription("");
-      setAttachment(null);
-      setMessage("Ticket created successfully ✅");
     }
   } catch (error) {
     console.error(error);
@@ -67,7 +53,6 @@ const handleSubmit = async (e) => {
     setLoading(false);
   }
 };
-
 
 
   return (
@@ -81,45 +66,13 @@ const handleSubmit = async (e) => {
           <Container>
             <div className='new-ticket-container'>
               <Form onSubmit={handleSubmit}>
-                <Row>
-                  <Col xs={12} md={4}>
-                    <Form.Group>
-                      <Form.Label>Ticket Type</Form.Label>
-                      <Form.Select
-                        value={type}
-                        onChange={(e) => setType(e.target.value)}
-                      >
-                        <option value=''>Select type</option>
-                        <option value='bug'>Bug</option>
-                        <option value='feature_request'>Feature Request</option>
-                        <option value='support'>Support</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                  <Col xs={12} md={4}>
-                    <Form.Group>
-                      <Form.Label>Ticket Priority</Form.Label>
-                      <Form.Select
-                        value={priority}
-                        onChange={(e) => setPriority(e.target.value)}
-                      >
-                        <option value=''>Select priority</option>
-                        <option value='urgent'>Urgent</option>
-                        <option value='high'>High</option>
-                        <option value='medium'>Medium</option>
-                        <option value='low'>Low</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <br />
                 <Form.Group>
-                  <Form.Label>Subject</Form.Label>
+                  <Form.Label>Title</Form.Label>
                   <Form.Control
                     type='text'
-                    placeholder='Subject'
+                    placeholder='Team title'
                     value={title}
-                    onChange={(e) => setSubject(e.target.value)}
+                    onChange={(e) => setTitle(e.target.value)}
                     required
                   />
                 </Form.Group>
@@ -133,15 +86,6 @@ const handleSubmit = async (e) => {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     required
-                  />
-                </Form.Group>
-                <br />
-                <Form.Group>
-                  <Form.Label>Attachments</Form.Label>
-                  <br />
-                  <input
-                    type='file'
-                    onChange={(e) => setAttachment(e.target.files[0])}
                   />
                 </Form.Group>
                 <br />

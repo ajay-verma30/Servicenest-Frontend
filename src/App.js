@@ -12,6 +12,8 @@ import SpecificTicket from './Pages/Tickets/SpecificTicket';
 import Users from './Pages/Users/Users';
 import SpecificUser from './Pages/Users/SpecificUser';
 import CreateUser from './Pages/Users/CreateUser';
+import Team from './Pages/Teams/Team';
+import CreateTeam from './Pages/Teams/CreateTeam'
 
 function App() {
   return (
@@ -32,6 +34,9 @@ function App() {
             <Route path="/:orgId/create-ticket" element={  <ProtectedRoute>
               <CreateTicket />
             </ProtectedRoute>} />
+            <Route path="/:orgId/create-team" element={  <ProtectedRoute>
+              <CreateTeam />
+            </ProtectedRoute>} />
             <Route path="/:orgId/ticket/:id" element={  <ProtectedRoute>
               <SpecificTicket />
             </ProtectedRoute>} />
@@ -43,6 +48,9 @@ function App() {
             </ProtectedRoute>} />
             <Route path="/:orgId/users/new" element={  <ProtectedRoute>
               < CreateUser/>
+            </ProtectedRoute>} />
+            <Route path="/:orgId/teams" element={  <ProtectedRoute>
+              < Team/>
             </ProtectedRoute>} />
             
         </Routes>

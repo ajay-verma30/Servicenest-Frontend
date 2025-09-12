@@ -12,13 +12,11 @@ import {
 } from "react-bootstrap";
 import { useAuth } from "../../Context/AuthContext";
 import axios from "axios";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Link, useParams } from "react-router-dom";
-
+import { useNavigate, useSearchParams, Link, useParams } from "react-router-dom";
 
 function Tickets() {
   const navigate = useNavigate();
-  const { accessToken} = useAuth();
+  const { accessToken } = useAuth();
   const { orgId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
@@ -48,7 +46,6 @@ function Tickets() {
   const getPriorityVariant = (priority) => {
     switch (priority) {
       case "high":
-        return "danger";
       case "urgent":
         return "danger";
       case "medium":
@@ -62,20 +59,26 @@ function Tickets() {
 
   useEffect(() => {
     const getTickets = async () => {
+      if (!accessToken || !orgId) return;
+
       try {
-        const results = await axios.get("http://localhost:3000/tickets/all", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          params: { search: searchTerm },
-        });
+        const results = await axios.get(
+          `http://localhost:3000/tickets/${orgId}/all`, 
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            params: { search: searchTerm },
+          }
+        );
         setTickets(results.data.data || []);
+        setErr(null);
       } catch (e) {
         console.error("Error fetching tickets:", e);
         setErr("Error fetching tickets");
       }
     };
 
-    if (accessToken) getTickets();
-  }, [accessToken, searchTerm]);
+    getTickets();
+  }, [accessToken, orgId, searchTerm]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -120,12 +123,16 @@ function Tickets() {
         </Col>
         <Col xs={10} md={10} className="content">
           <Container className="my-5">
-            <div className="d-flex justify-content-end">
-      <Button as={Link} to={`/${orgId}/create-ticket`} variant="primary" className="create-btn">
-        Create Ticket
-      </Button>
-    </div>
-            <br />
+            <div className="d-flex justify-content-end mb-3">
+              <Button
+                as={Link}
+                to={`/${orgId}/create-ticket`}
+                variant="primary"
+              >
+                Create Ticket
+              </Button>
+            </div>
+
             <Row className="mb-3 align-items-center">
               <Col xs={12} md={4}>
                 <h2 className="mb-0">All Tickets</h2>
@@ -156,56 +163,52 @@ function Tickets() {
             {err && <p className="text-danger text-center">{err}</p>}
 
             {sortedTickets.length > 0 ? (
-              <>
-                <div className="d-none d-md-block">
-                  <Table striped bordered hover responsive>
-                    <thead>
-                      <tr>
-                        <th>Subject</th>
-                        <th>Description</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Assignee</th>
-                        <th>Created</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedTickets.map((ticket) => (
-                        <tr
-                          key={ticket.id}
-                          onClick={() =>
-                            navigate(`/${orgId}/ticket/${ticket.id}`)
-                          }
-                          style={{ cursor: "pointer" }}
-                        >
-                          <td>
-                            <Link to={`/${orgId}/ticket/${ticket.id}`}>
-                              {ticket.title}
-                            </Link>
-                          </td>
-                          <td>{ticket.description}</td>
-                          <td>
-                            <Badge bg={getStatusVariant(ticket.status)}>
-                              {ticket.status}
-                            </Badge>
-                          </td>
-                          <td>
-                            <Badge bg={getPriorityVariant(ticket.priority)}>
-                              {ticket.priority}
-                            </Badge>
-                          </td>
-                          <td>{ticket.assignee_id || "Unassigned"}</td>
-                          <td>
-                            {ticket.created_at
-                              ? new Date(ticket.created_at).toLocaleString()
-                              : "N/A"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              </>
+              <Table striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Assigned to</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedTickets.map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      onClick={() =>
+                        navigate(`/${orgId}/ticket/${ticket.id}`)
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td>
+                        <Link to={`/${orgId}/ticket/${ticket.id}`}>
+                          {ticket.title}
+                        </Link>
+                      </td>
+                      <td>{ticket.description}</td>
+                      <td>
+                        <Badge bg={getStatusVariant(ticket.status)}>
+                          {ticket.status}
+                        </Badge>
+                      </td>
+                      <td>
+                        <Badge bg={getPriorityVariant(ticket.priority)}>
+                          {ticket.priority}
+                        </Badge>
+                      </td>
+                      <td>{ticket.assignee_name || "Unassigned"}</td>
+                      <td>
+                        {ticket.created_at
+                          ? new Date(ticket.created_at).toLocaleString()
+                          : "N/A"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
             ) : (
               <p className="text-center">No tickets found.</p>
             )}

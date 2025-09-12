@@ -7,7 +7,7 @@ import { useAuth } from '../../Context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 function CreateUser() {
-  const { accessToken, orgId } = useAuth();
+  const { accessToken, user } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -46,6 +46,7 @@ function CreateUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccessMsg(null);
+    const organizationId = user.orgId;
     const validationError = validate();
     if (validationError) {
       setErrorMsg(validationError);
@@ -63,7 +64,7 @@ function CreateUser() {
         password: form.password,
         role: form.role,
         contact: form.contact || null,
-        organization: orgId,
+        organization: organizationId,
       };
 
       const res = await axios.post("http://localhost:3000/user/new", payload, {

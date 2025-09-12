@@ -190,7 +190,6 @@ function Users() {
         <Col xs={10} md={10} className="content p-4">
           <Container fluid className="bg-light p-4">
             <div className="mx-auto" style={{ maxWidth: "1400px" }}>
-              {/* Header */}
               <div className="mb-4">
                 <h1 className="display-6 fw-bold text-dark mb-2">
                   Users Management
@@ -200,7 +199,6 @@ function Users() {
                 </p>
               </div>
 
-              {/* Action Bar */}
               <Card className="shadow-sm mb-4">
                 <Card.Body>
                   <Row className="g-3 align-items-center">
@@ -237,14 +235,13 @@ function Users() {
                         >
                           <option value="all">All Status</option>
                           <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                          <option value="pending">Pending</option>
                           <option value="suspended">Suspended</option>
                         </Form.Select>
                         <Link to={`/${orgId}/users/new`}>
-                        <Button variant="primary">
-                          <span style={{ fontSize: "16px" }}>👤</span> Add User
-                        </Button>
+                          <Button variant="primary">
+                            <span style={{ fontSize: "16px" }}>👤</span> Add
+                            User
+                          </Button>
                         </Link>
                       </div>
                     </Col>
@@ -255,8 +252,6 @@ function Users() {
                   </small>
                 </Card.Body>
               </Card>
-
-              {/* Table */}
               <Card className="shadow-sm">
                 <Card.Body className="p-0">
                   {filteredUsers.length === 0 ? (
@@ -306,7 +301,6 @@ function Users() {
                                 key={user.id}
                                 style={{ borderTop: "1px solid #dee2e6" }}
                               >
-                                {/* User Info */}
                                 <td className="px-4 py-3">
                                   <div className="d-flex align-items-center gap-3">
                                     <AvatarComponent
@@ -324,8 +318,6 @@ function Users() {
                                     </div>
                                   </div>
                                 </td>
-
-                                {/* Role */}
                                 <td className="px-4 py-3">
                                   <Badge
                                     bg={getRoleVariant(user.role)}
@@ -335,7 +327,6 @@ function Users() {
                                   </Badge>
                                 </td>
 
-                                {/* Status */}
                                 <td className="px-4 py-3">
                                   <Badge
                                     bg={getStatusVariant(user.status)}
@@ -345,7 +336,6 @@ function Users() {
                                   </Badge>
                                 </td>
 
-                                {/* Join Date */}
                                 <td className="px-4 py-3">
                                   <small className="text-muted">
                                     {joinDate
@@ -382,7 +372,6 @@ function Users() {
                 </Card.Body>
               </Card>
 
-              {/* Pagination */}
               {filteredUsers.length > 0 && (
                 <Card className="shadow-sm mt-4">
                   <Card.Body>

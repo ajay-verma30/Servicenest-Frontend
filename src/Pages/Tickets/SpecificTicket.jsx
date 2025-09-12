@@ -24,12 +24,12 @@ function SpecificTicket() {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isInternal, setIsInternal] = useState(null);
+  const [isInternal, setIsInternal] = useState(true);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [updatedFields, setUpdatedFields] = useState({});
   const [showHistory, setShowHistory] = useState(false);
-
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -39,7 +39,6 @@ function SpecificTicket() {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-        console.log("Ticket data:", result.data.data);
         setTicket(result.data.data);
       } catch (err) {
         console.error(err);
@@ -50,8 +49,6 @@ function SpecificTicket() {
     };
     fetchTicket();
   }, [id, accessToken]);
-
-
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -68,7 +65,6 @@ function SpecificTicket() {
     fetchTeams();
   }, [orgId, accessToken]);
 
-  
   useEffect(() => {
     const loadMembersForAssignedTeam = async () => {
       if (ticket && ticket.assigned_team) {
@@ -84,46 +80,54 @@ function SpecificTicket() {
         }
       }
     };
-    
+
     loadMembersForAssignedTeam();
   }, [ticket?.assigned_team, orgId, accessToken]);
 
   const addComment = async (e) => {
-    e.preventDefault();
-    if (!comment || isInternal === null) {
-      setError("Please enter a comment and choose internal option");
-      return;
-    }
+  e.preventDefault();
+  if ((!comment && !selectedFile) || isInternal === null) {
+    setError("Please enter a comment or upload a file and choose internal option");
+    return;
+  }
 
-    const payload = {
-      ticket_id: id,
-      user_id: user.id,
-      message: comment,
-      is_internal: isInternal,
-    };
+  const formData = new FormData();
+  formData.append("ticket_id", id);
+  formData.append("user_id", user.id);
+  formData.append("message", comment || "");
+  formData.append("is_internal", isInternal);
 
-    try {
-      setSubmitting(true);
-      setError(null);
+  if (selectedFile) {
+    formData.append("attachment", selectedFile);
+  }
 
-      await axios.post("http://localhost:3000/comments/new", payload, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+  try {
+    setSubmitting(true);
+    setError(null);
 
-      const updated = await axios.get(`http://localhost:3000/tickets/${id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      setTicket(updated.data.data);
+    await axios.post("http://localhost:3000/comments/new", formData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      setComment("");
-      setIsInternal(null);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to add comment");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    const updated = await axios.get(`http://localhost:3000/tickets/${id}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    setTicket(updated.data.data);
+
+    setComment("");
+    setIsInternal(null);
+    setSelectedFile(null);
+  } catch (err) {
+    console.error(err);
+    setError("Failed to add comment");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const updateTicket = async () => {
     try {
@@ -135,23 +139,22 @@ function SpecificTicket() {
         return;
       }
 
-      console.log("Updating ticket with fields:", updatedFields);
-
-      const response = await axios.patch(`http://localhost:3000/tickets/${id}`, updatedFields, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      console.log("Update response:", response.data);
+      const response = await axios.patch(
+        `http://localhost:3000/tickets/${id}`,
+        updatedFields,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
 
       setUpdatedFields({});
       const updated = await axios.get(`http://localhost:3000/tickets/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setTicket(updated.data.data);
-      
 
       if (response.data.updatedFields > 0) {
-        alert(`Successfully updated ${response.data.updatedFields} field(s)`); 
+        alert(`Successfully updated ${response.data.updatedFields} field(s)`);
         window.location.reload();
       }
     } catch (err) {
@@ -164,17 +167,17 @@ function SpecificTicket() {
 
   const handleTeamChange = async (selectedTeam) => {
     const oldTeam = ticket.assigned_team;
-    
+
     setTicket((prev) => ({
       ...prev,
       assigned_team: selectedTeam,
-      assignee_id: "", 
+      assignee_id: "",
     }));
-    
+
     setUpdatedFields((prev) => ({
       ...prev,
       assigned_team: selectedTeam,
-      assignee_id: oldTeam !== selectedTeam ? "" : prev.assignee_id, 
+      assignee_id: oldTeam !== selectedTeam ? "" : prev.assignee_id,
     }));
 
     if (selectedTeam) {
@@ -198,7 +201,7 @@ function SpecificTicket() {
       ...prev,
       assignee_id: selectedAssignee,
     }));
-    
+
     setUpdatedFields((prev) => ({
       ...prev,
       assignee_id: selectedAssignee,
@@ -207,88 +210,88 @@ function SpecificTicket() {
 
   const formatFieldName = (fieldName) => {
     const fieldMap = {
-      'assignee_id': 'Assignee',
-      'assigned_team': 'Team',
-      'priority': 'Priority',
-      'status': 'Status',
-      'type': 'Type'
+      assignee_id: "Assignee",
+      assigned_team: "Team",
+      priority: "Priority",
+      status: "Status",
+      type: "Type",
     };
     return fieldMap[fieldName] || fieldName;
   };
 
   const formatFieldValue = (fieldName, value) => {
-    if (!value) return 'None';
-    
-    // For assignee_id, try to find the user name from members or ticket data
-    if (fieldName === 'assignee_id') {
+    if (!value) return "None";
+
+    if (fieldName === "assignee_id") {
       if (value === ticket?.assignee_id && ticket?.assignee_name) {
         return ticket.assignee_name;
       }
-      const member = members.find(m => m.id === value);
+      const member = members.find((m) => m.id === value);
       return member ? member.name : value;
     }
-    
-    // For assigned_team, try to find the team name
-    if (fieldName === 'assigned_team') {
+
+    if (fieldName === "assigned_team") {
       if (value === ticket?.assigned_team && ticket?.team_title) {
         return ticket.team_title;
       }
-      const team = teams.find(t => t.id === value);
+      const team = teams.find((t) => t.id === value);
       return team ? team.title : value;
     }
-    
+
     return value;
   };
 
   const getPriorityBadge = (priority) => {
     const variants = {
-      'urgent': 'danger',
-      'high': 'warning',
-      'medium': 'info',
-      'low': 'secondary'
+      urgent: "danger",
+      high: "warning",
+      medium: "info",
+      low: "secondary",
     };
-    return variants[priority] || 'secondary';
+    return variants[priority] || "secondary";
   };
 
   const getStatusBadge = (status) => {
     const variants = {
-      'open': 'primary',
-      'in_progress': 'warning',
-      'resolved': 'success',
-      'closed': 'secondary',
-      'rejected': 'danger'
+      open: "primary",
+      in_progress: "warning",
+      resolved: "success",
+      closed: "secondary",
+      rejected: "danger",
     };
-    return variants[status] || 'secondary';
+    return variants[status] || "secondary";
   };
-
 
   useEffect(() => {
-  const fetchTicket = async () => {
-    try {
-      const [ticketRes, updatesRes] = await Promise.all([
-        axios.get(`http://localhost:3000/tickets/${id}`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }),
-        axios.get(`http://localhost:3000/tickets/${id}/updates`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        })
-      ]);
+    const fetchTicket = async () => {
+      try {
+        const [ticketRes, updatesRes] = await Promise.all([
+          axios.get(`http://localhost:3000/tickets/${id}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+          axios.get(`http://localhost:3000/tickets/${id}/updates`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+        ]);
 
-      setTicket({
-        ...ticketRes.data.data,
-        updates: updatesRes.data.data
-      });
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load ticket");
-    } finally {
-      setLoading(false);
-    }
+        setTicket({
+          ...ticketRes.data.data,
+          updates: updatesRes.data.data,
+        });
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load ticket");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTicket();
+  }, [id, accessToken]);
+
+  const getFilenameFromUrl = (url) => {
+    return url.split('/').pop() || 'Download';
   };
-
-  fetchTicket();
-}, [id, accessToken]);
-
 
   return (
     <>
@@ -308,7 +311,10 @@ function SpecificTicket() {
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h4>Ticket #{ticket.id}</h4>
                   <div>
-                    <Badge variant={getPriorityBadge(ticket.priority)} className="me-2">
+                    <Badge
+                      variant={getPriorityBadge(ticket.priority)}
+                      className="me-2"
+                    >
                       {ticket.priority}
                     </Badge>
                     <Badge variant={getStatusBadge(ticket.status)}>
@@ -316,13 +322,35 @@ function SpecificTicket() {
                     </Badge>
                   </div>
                 </div>
+                
+                {ticket.attachments && ticket.attachments.length > 0 && (
+                  <div className="mb-3">
+                    <h6>Attachments</h6>
+                    <ul>
+                      {ticket.attachments.map((att, idx) => (
+                        <li key={idx}>
+                          <a
+                            href={att.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {getFilenameFromUrl(att.file_url)}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <Form>
                   <Row>
                     <Col xs={12} md={4}>
                       <Form.Group>
                         <Form.Label>Created By</Form.Label>
-                        <Form.Control value={ticket.created_by_name || ""} readOnly />
+                        <Form.Control
+                          value={ticket.created_by_name || ""}
+                          readOnly
+                        />
                       </Form.Group>
                     </Col>
                     <Col xs={12} md={4}>
@@ -354,7 +382,9 @@ function SpecificTicket() {
                         {user.role === "admin" || user.role === "agent" ? (
                           <Form.Select
                             value={ticket.assignee_id || ""}
-                            onChange={(e) => handleAssigneeChange(e.target.value)}
+                            onChange={(e) =>
+                              handleAssigneeChange(e.target.value)
+                            }
                             disabled={!ticket.assigned_team}
                           >
                             <option value="">-- Select Member --</option>
@@ -399,7 +429,10 @@ function SpecificTicket() {
                             <option value="urgent">Urgent</option>
                           </Form.Select>
                         ) : (
-                          <Form.Control value={ticket.priority || ""} readOnly />
+                          <Form.Control
+                            value={ticket.priority || ""}
+                            readOnly
+                          />
                         )}
                       </Form.Group>
                     </Col>
@@ -497,19 +530,18 @@ function SpecificTicket() {
                   </div>
                 )}
 
-
                 <hr />
                 <div className="d-flex justify-content-between align-items-center">
                   <h6>Update History</h6>
-                  <Button 
-                    variant="outline-secondary" 
+                  <Button
+                    variant="outline-secondary"
                     size="sm"
                     onClick={() => setShowHistory(!showHistory)}
                   >
-                    {showHistory ? 'Hide' : 'Show'} History
+                    {showHistory ? "Hide" : "Show"} History
                   </Button>
                 </div>
-                
+
                 {showHistory && (
                   <div className="mt-3">
                     {ticket.updates && ticket.updates.length > 0 ? (
@@ -518,11 +550,16 @@ function SpecificTicket() {
                           <Card.Body className="py-2">
                             <Row>
                               <Col xs={3}>
-                                <strong>{formatFieldName(update.field_name)}</strong>
+                                <strong>
+                                  {formatFieldName(update.field_name)}
+                                </strong>
                               </Col>
                               <Col xs={3}>
                                 <span className="text-muted">
-                                  {formatFieldValue(update.field_name, update.old_value) || 'None'}
+                                  {formatFieldValue(
+                                    update.field_name,
+                                    update.old_value
+                                  ) || "None"}
                                 </span>
                               </Col>
                               <Col xs={1}>
@@ -530,12 +567,16 @@ function SpecificTicket() {
                               </Col>
                               <Col xs={3}>
                                 <span className="text-success">
-                                  {formatFieldValue(update.field_name, update.new_value) || 'None'}
+                                  {formatFieldValue(
+                                    update.field_name,
+                                    update.new_value
+                                  ) || "None"}
                                 </span>
                               </Col>
                               <Col xs={2} className="text-end">
                                 <small className="text-muted">
-                                  {update.updated_by_name || 'System'}<br/>
+                                  {update.updated_by_name || "System"}
+                                  <br />
                                   {new Date(update.created_at).toLocaleString()}
                                 </small>
                               </Col>
@@ -562,33 +603,36 @@ function SpecificTicket() {
                   </Form.Group>
                   <br />
                   <div className="d-flex justify-content-between align-items-center">
-  {/* File input on the left */}
-  <Form.Group>
-    <Form.Label>Upload File</Form.Label>
-    <Form.Control type="file" />
-  </Form.Group>
+                    <Form.Group>
+                      <Form.Label>Upload File</Form.Label>
+                      <Form.Control 
+                        type="file" 
+                        onChange={(e) => setSelectedFile(e.target.files[0])}
+                      />
+                    </Form.Group>
 
-  {/* Dropdown on the right */}
-  <Form.Group>
-    <Form.Label>Internal</Form.Label>
-    <Dropdown onSelect={(val) => setIsInternal(val === "yes")}>
-      <Dropdown.Toggle
-        variant={isInternal === false ? "danger" : "primary"}
-        id="dropdown-internal"
-      >
-        {isInternal === true
-          ? "Yes"
-          : isInternal === false
-          ? "No"
-          : "Select option"}
-      </Dropdown.Toggle>
-      <Dropdown.Menu>
-        <Dropdown.Item eventKey="yes">Yes</Dropdown.Item>
-        <Dropdown.Item eventKey="no">No</Dropdown.Item>
-      </Dropdown.Menu>
-    </Dropdown>
-  </Form.Group>
-</div>
+                    <Form.Group>
+                      <Form.Label>Internal</Form.Label>
+                      <Dropdown
+                        onSelect={(val) => setIsInternal(val === "yes")}
+                      >
+                        <Dropdown.Toggle
+                          variant={isInternal === false ? "danger" : "primary"}
+                          id="dropdown-internal"
+                        >
+                          {isInternal === true
+                            ? "Yes"
+                            : isInternal === false
+                            ? "No"
+                            : "Select option"}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item eventKey="yes">Yes</Dropdown.Item>
+                          <Dropdown.Item eventKey="no">No</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Form.Group>
+                  </div>
                   <br />
                   <Button
                     type="submit"
@@ -598,19 +642,48 @@ function SpecificTicket() {
                     {submitting ? "Submitting..." : "Comment"}
                   </Button>
                 </Form>
-                <hr/>
+                <hr />
                 <h6>Comments</h6>
                 {ticket.comments && ticket.comments.length === 0 ? (
                   <p>No comments yet.</p>
                 ) : (
-                  ticket.comments && ticket.comments.map((c, idx) => (
-                    <Card key={idx} className="mb-2">
+                  ticket.comments &&
+                  ticket.comments.map((c, idx) => (
+                    <Card
+                      key={idx}
+                      className={`mb-2 ${
+                        c.is_internal
+                          ? "bg-light text-dark border-danger"
+                          : "bg-light text-dark border-success"
+                      }`}
+                    >
                       <Card.Body>
                         <Row>
                           <Col xs={10}>
                             <strong>{c.commented_by}:</strong> {c.message}
-                            {c.is_internal && (
-                              <Badge variant="warning" className="ms-2">Internal</Badge>
+                            {c.is_internal === true || c.is_internal === 1 ? (
+                              <Badge bg="warning" className="ms-2">
+                                Internal
+                              </Badge>
+                            ) : null}
+                            {c.attachments && c.attachments.length > 0 && (
+                              <div className="mt-2">
+                                <small className="text-muted">Attachments:</small>
+                                <ul className="list-unstyled mt-1">
+                                  {c.attachments.map((att, attIdx) => (
+                                    <li key={attIdx}>
+                                      <a
+                                        href={att.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary"
+                                      >
+                                        📎 {getFilenameFromUrl(att.file_url)}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
                             )}
                           </Col>
                           <Col xs={2} className="text-end">
