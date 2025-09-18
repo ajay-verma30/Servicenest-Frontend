@@ -1,0 +1,12 @@
+.table-row-hover:hover {
+                    background-color: #f8f9fa !important;
+                    transform: translateY(-1px);
+                    transition: all 0.2s ease;
+                }
+                .card {
+                    border: none;
+                    border-radius: 10px;
+                }
+                .card-header {
+                    border-radius: 10px 10px 0 0 !important;
+                }

@@ -14,6 +14,12 @@ import SpecificUser from './Pages/Users/SpecificUser';
 import CreateUser from './Pages/Users/CreateUser';
 import Team from './Pages/Teams/Team';
 import CreateTeam from './Pages/Teams/CreateTeam'
+import Groups from './Pages/Groups/Groups';
+import SpecGroups from './Pages/Groups/SpecGroups';
+import CreateGroup from './Pages/Groups/CreateGroup';
+import Roles from './Pages/Roles/Roles';
+import SpecRoles from './Pages/Roles/SpecRoles';
+import TeamMembers from './Pages/Teams/TeamMembers';
 
 function App() {
   return (
@@ -52,7 +58,24 @@ function App() {
             <Route path="/:orgId/teams" element={  <ProtectedRoute>
               < Team/>
             </ProtectedRoute>} />
-            
+            <Route path="/:orgId/groups" element={  <ProtectedRoute>
+              < Groups/>
+            </ProtectedRoute>} />
+            <Route path="/:orgId/group/:id" element={  <ProtectedRoute>
+              < SpecGroups/>
+            </ProtectedRoute>} />
+            <Route path="/:orgId/group/create" element={  <ProtectedRoute>
+              < CreateGroup/>
+            </ProtectedRoute>} />
+            <Route path="/:orgId/roles" element={  <ProtectedRoute>
+              < Roles/>
+            </ProtectedRoute>} />
+            <Route path="/:orgId/role/:id" element={  <ProtectedRoute>
+              < SpecRoles/>
+            </ProtectedRoute>} />
+            <Route path="/:orgId/teams/:teamId/users" element={  <ProtectedRoute>
+              < TeamMembers/>
+            </ProtectedRoute>} />            
         </Routes>
       </AuthProvider>
     </Router>      

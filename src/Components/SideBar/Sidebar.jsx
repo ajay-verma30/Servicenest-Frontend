@@ -2,14 +2,16 @@ import React from 'react';
 import { useAuth } from '../../Context/AuthContext';
 import './Sidebar.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHome, faTicketAlt, faUsers, faBook, faCode } from "@fortawesome/free-solid-svg-icons";
+import { faHome, faTicketAlt, faUsers, faBook, faCode,faGroupArrowsRotate,faUser, faExclamation } from "@fortawesome/free-solid-svg-icons";
 import { Link } from 'react-router-dom';
 
 function Sidebar() {
   const { user } = useAuth();
   const orgId = user?.orgId;
 
-  const isAdminOrAgent = user?.role === "admin" || user?.role === "agent";
+  const isAdminOrAgent = user?.roles?.some(
+  (r) => r.title === "Admin" || r.title === "agent"
+);
 
   return (
     <div className="sidebar">
@@ -28,7 +30,7 @@ function Sidebar() {
       {isAdminOrAgent && (
         <>
           <Link className="btn sidebar-menu" to={`/${orgId}/users`}>
-            <FontAwesomeIcon icon={faUsers} className="me-2" />
+            <FontAwesomeIcon icon={faUser} className="me-2" />
             Users
           </Link>
           <br />
@@ -38,19 +40,28 @@ function Sidebar() {
             Teams
           </Link>
           <br />
+          <Link className="btn sidebar-menu" to={`/${orgId}/groups`}>
+            <FontAwesomeIcon icon={faGroupArrowsRotate} className="me-2" />
+            Groups
+          </Link>
+          <br/>
+          <Link className="btn sidebar-menu" to={`/${orgId}/roles`}>
+            <FontAwesomeIcon icon={faExclamation} className="me-2" />
+            Roles
+          </Link>
 
-          <Link className="btn sidebar-menu" to={`/${orgId}/developers`}>
+          {/* <Link className="btn sidebar-menu" to={`/${orgId}/developers`}>
             <FontAwesomeIcon icon={faCode} className="me-2" />
             Developers
-          </Link>
+          </Link> */}
           <br />
         </>
       )}
 
-      <Link className="btn sidebar-menu" to={`/${orgId}/knowledgeBase`}>
+      {/* <Link className="btn sidebar-menu" to={`/${orgId}/knowledgeBase`}>
         <FontAwesomeIcon icon={faBook} className="me-2" />
         Knowledge Base
-      </Link>
+      </Link> */}
       <br />
     </div>
   );

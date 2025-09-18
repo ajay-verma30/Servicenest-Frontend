@@ -13,3 +13,13 @@
 button {
   font-size: 0.9rem;
 }
+
+
+.deleteIcon{
+  cursor: pointer;
+}
+
+.deleteIcon:hover{
+  color: red;
+}
+

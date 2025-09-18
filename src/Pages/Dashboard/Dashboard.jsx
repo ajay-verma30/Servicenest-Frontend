@@ -301,6 +301,8 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [timeRange, setTimeRange] = useState("30");
   const [myTickets, setMyTickets] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+const [priorityFilter, setPriorityFilter] = useState("all");
  
 
   useEffect(() => {
@@ -474,17 +476,7 @@ function Dashboard() {
                       </div>
                       <div>
                         <h4 className="mb-1 fw-bold">Welcome back, {user.email}!</h4>
-                        <Badge 
-                          style={{
-                            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                            color: 'white',
-                            padding: '8px 16px',
-                            borderRadius: '20px',
-                            fontSize: '12px'
-                          }}
-                        >
-                          {user.role.toUpperCase()}
-                        </Badge>
+                      
                       </div>
                     </div>
                   </Col>

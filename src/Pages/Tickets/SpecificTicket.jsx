@@ -24,7 +24,7 @@ function SpecificTicket() {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isInternal, setIsInternal] = useState(true);
+  const [isInternal, setIsInternal] = useState(null);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [updatedFields, setUpdatedFields] = useState({});
@@ -54,10 +54,10 @@ function SpecificTicket() {
     const fetchTeams = async () => {
       try {
         const teamsRes = await axios.get(
-          `http://localhost:3000/tickets/${orgId}/teams`,
+          `http://localhost:3000/teams/${orgId}/all`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        setTeams(teamsRes.data.data);
+        setTeams(teamsRes.data.result);
       } catch (err) {
         console.error("Failed to load teams", err);
       }
@@ -70,10 +70,10 @@ function SpecificTicket() {
       if (ticket && ticket.assigned_team) {
         try {
           const usersRes = await axios.get(
-            `http://localhost:3000/tickets/${orgId}/teams/${ticket.assigned_team}/users`,
+            `http://localhost:3000/teams/${orgId}/teams/${ticket.assigned_team}/members`,
             { headers: { Authorization: `Bearer ${accessToken}` } }
           );
-          setMembers(usersRes.data.data);
+          setMembers(usersRes.data.members);
         } catch (err) {
           console.error("Failed to fetch users for assigned team", err);
           setMembers([]);
@@ -85,49 +85,48 @@ function SpecificTicket() {
   }, [ticket?.assigned_team, orgId, accessToken]);
 
   const addComment = async (e) => {
-  e.preventDefault();
-  if ((!comment && !selectedFile) || isInternal === null) {
-    setError("Please enter a comment or upload a file and choose internal option");
-    return;
-  }
+    e.preventDefault();
+    if ((!comment && !selectedFile) || isInternal === null) {
+      setError("Please enter a comment or upload a file and choose internal option");
+      return;
+    }
 
-  const formData = new FormData();
-  formData.append("ticket_id", id);
-  formData.append("user_id", user.id);
-  formData.append("message", comment || "");
-  formData.append("is_internal", isInternal);
+    const formData = new FormData();
+    formData.append("ticket_id", id);
+    formData.append("user_id", user.userId || user.id);
+    formData.append("message", comment || "");
+    formData.append("is_internal", isInternal);
 
-  if (selectedFile) {
-    formData.append("attachment", selectedFile);
-  }
+    if (selectedFile) {
+      formData.append("attachment", selectedFile);
+    }
 
-  try {
-    setSubmitting(true);
-    setError(null);
+    try {
+      setSubmitting(true);
+      setError(null);
 
-    await axios.post("http://localhost:3000/comments/new", formData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "multipart/form-data",
-      },
-    });
+      await axios.post("http://localhost:3000/comments/new", formData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    const updated = await axios.get(`http://localhost:3000/tickets/${id}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    setTicket(updated.data.data);
+      const updated = await axios.get(`http://localhost:3000/tickets/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      setTicket(updated.data.data);
 
-    setComment("");
-    setIsInternal(null);
-    setSelectedFile(null);
-  } catch (err) {
-    console.error(err);
-    setError("Failed to add comment");
-  } finally {
-    setSubmitting(false);
-  }
-};
-
+      setComment("");
+      setIsInternal(null);
+      setSelectedFile(null);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to add comment");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const updateTicket = async () => {
     try {
@@ -183,10 +182,10 @@ function SpecificTicket() {
     if (selectedTeam) {
       try {
         const usersRes = await axios.get(
-          `http://localhost:3000/tickets/${orgId}/teams/${selectedTeam}/users`,
+          `http://localhost:3000/teams/${orgId}/teams/${selectedTeam}/members`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        setMembers(usersRes.data.data);
+        setMembers(usersRes.data.members);
       } catch (err) {
         console.error("Failed to fetch users for team", err);
         setMembers([]);
@@ -227,7 +226,7 @@ function SpecificTicket() {
         return ticket.assignee_name;
       }
       const member = members.find((m) => m.id === value);
-      return member ? member.name : value;
+      return member ? member.full_name : value;
     }
 
     if (fieldName === "assigned_team") {
@@ -263,7 +262,7 @@ function SpecificTicket() {
   };
 
   useEffect(() => {
-    const fetchTicket = async () => {
+    const fetchTicketWithUpdates = async () => {
       try {
         const [ticketRes, updatesRes] = await Promise.all([
           axios.get(`http://localhost:3000/tickets/${id}`, {
@@ -286,12 +285,28 @@ function SpecificTicket() {
       }
     };
 
-    fetchTicket();
+    fetchTicketWithUpdates();
   }, [id, accessToken]);
 
   const getFilenameFromUrl = (url) => {
     return url.split('/').pop() || 'Download';
   };
+
+  const isAdminOrAgent = () => {
+    if (user?.roles && Array.isArray(user.roles)) {
+      return user.roles.some(role => 
+        role.title === "Admin" ||
+        role.title === "admin" ||
+        role.title === "agent" || 
+        role.title === "Administrator" ||
+        role.title === "administrator" || 
+        role.title === "Agent"
+      );
+    }
+    return user?.role === "admin" || user?.role === "agent";
+  };
+
+  const canEditTicket = isAdminOrAgent();
 
   return (
     <>
@@ -312,12 +327,12 @@ function SpecificTicket() {
                   <h4>Ticket #{ticket.id}</h4>
                   <div>
                     <Badge
-                      variant={getPriorityBadge(ticket.priority)}
+                      bg={getPriorityBadge(ticket.priority)}
                       className="me-2"
                     >
                       {ticket.priority}
                     </Badge>
-                    <Badge variant={getStatusBadge(ticket.status)}>
+                    <Badge bg={getStatusBadge(ticket.status)}>
                       {ticket.status}
                     </Badge>
                   </div>
@@ -356,7 +371,7 @@ function SpecificTicket() {
                     <Col xs={12} md={4}>
                       <Form.Group>
                         <Form.Label>Team</Form.Label>
-                        {user.role === "admin" || user.role === "agent" ? (
+                        {canEditTicket ? (
                           <Form.Select
                             value={ticket.assigned_team || ""}
                             onChange={(e) => handleTeamChange(e.target.value)}
@@ -379,7 +394,7 @@ function SpecificTicket() {
                     <Col xs={12} md={4}>
                       <Form.Group>
                         <Form.Label>Assigned To</Form.Label>
-                        {user.role === "admin" || user.role === "agent" ? (
+                        {canEditTicket ? (
                           <Form.Select
                             value={ticket.assignee_id || ""}
                             onChange={(e) =>
@@ -390,7 +405,7 @@ function SpecificTicket() {
                             <option value="">-- Select Member --</option>
                             {members.map((m) => (
                               <option key={m.id} value={m.id}>
-                                {m.name} ({m.email})
+                                {m.full_name} ({m.email})
                               </option>
                             ))}
                           </Form.Select>
@@ -409,7 +424,7 @@ function SpecificTicket() {
                     <Col xs={12} md={4}>
                       <Form.Group>
                         <Form.Label>Priority</Form.Label>
-                        {user.role === "admin" || user.role === "agent" ? (
+                        {canEditTicket ? (
                           <Form.Select
                             value={ticket.priority || ""}
                             onChange={(e) => {
@@ -440,7 +455,7 @@ function SpecificTicket() {
                     <Col xs={12} md={4}>
                       <Form.Group>
                         <Form.Label>Type</Form.Label>
-                        {user.role === "admin" || user.role === "agent" ? (
+                        {canEditTicket ? (
                           <Form.Select
                             value={ticket.type || ""}
                             onChange={(e) => {
@@ -467,7 +482,7 @@ function SpecificTicket() {
                     <Col xs={12} md={4}>
                       <Form.Group>
                         <Form.Label>Status</Form.Label>
-                        {user.role === "admin" || user.role === "agent" ? (
+                        {canEditTicket ? (
                           <Form.Select
                             value={ticket.status || ""}
                             onChange={(e) => {
@@ -510,7 +525,7 @@ function SpecificTicket() {
                   </Form.Group>
                 </Form>
 
-                {(user.role === "admin" || user.role === "agent") && (
+                {canEditTicket && (
                   <div className="mt-3">
                     <Button
                       variant="primary"

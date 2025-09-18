@@ -56,15 +56,11 @@ export const AuthProvider = ({ children }) => {
 
       const refreshTime = Math.max(timeUntilExpiry - 2 * 60 * 1000, 30 * 1000);
 
-      console.log(`Token expires in ${timeUntilExpiry/1000}s, refreshing in ${refreshTime/1000}s`);
-
       if (refreshTime > 0) {
         refreshTimeoutRef.current = setTimeout(() => {
-          console.log("Scheduled refresh triggered");
           refreshToken();
         }, refreshTime);
       } else {
-        console.log("Token expired/expiring soon, refreshing immediately");
         refreshToken();
       }
     } catch (err) {
@@ -91,7 +87,6 @@ export const AuthProvider = ({ children }) => {
       const originalRequest = error.config;
 
       if (error.response?.status === 401 && !originalRequest._retry) {
-        console.log("401 response received, attempting token refresh");
         
         if (isRefreshingRef.current) {
           return new Promise((resolve, reject) => {
@@ -114,7 +109,6 @@ export const AuthProvider = ({ children }) => {
             return api(originalRequest);
           }
         } catch (err) {
-          console.error("Refresh failed in interceptor:", err);
           processQueue(err, null);
           logout();
           return Promise.reject(err);
@@ -135,16 +129,8 @@ export const AuthProvider = ({ children }) => {
           const decoded = jwtDecode(token);
           const isExpired = decoded.exp * 1000 < Date.now();
           const isNearExpiry = decoded.exp * 1000 < Date.now() + 60 * 1000;
-          
-          console.log("Token initialization:", {
-            isExpired,
-            isNearExpiry,
-            expiresAt: new Date(decoded.exp * 1000),
-            now: new Date()
-          });
 
           if (isExpired || isNearExpiry) {
-            console.log("Token expired/near expiry, attempting refresh");
             const newToken = await refreshToken();
             if (!newToken) {
               console.log("Refresh failed during initialization, logging out");
@@ -152,18 +138,16 @@ export const AuthProvider = ({ children }) => {
               return;
             }
           } else {
-            console.log("Token is valid, setting user state");
             setUser({
               id: decoded.userId,
               email: decoded.email,
-              role: decoded.role,
+              roles: decoded.roles, // Corrected line
               orgId: decoded.userOrg,
             });
             setAccessToken(token);
             scheduleTokenRefresh(token);
           }
         } catch (err) {
-          console.error("Invalid token on load:", err);
           logout();
         }
       } else {
@@ -182,12 +166,10 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = async () => {
     if (isRefreshingRef.current) {
-      console.log("Refresh already in progress, skipping");
       return null;
     }
     
     isRefreshingRef.current = true;
-    console.log("Starting token refresh");
 
     try {
       const res = await axios.post(
@@ -199,7 +181,6 @@ export const AuthProvider = ({ children }) => {
         }
       );
 
-      console.log("Refresh response:", res.data);
 
       if (res.data.success && res.data.accessToken) {
         const newToken = res.data.accessToken;
@@ -210,13 +191,12 @@ export const AuthProvider = ({ children }) => {
         const userData = {
           id: decoded.userId,
           email: decoded.email,
-          role: decoded.role,
+          roles: decoded.roles, // Corrected line
           orgId: decoded.userOrg,
         };
         
         setUser(userData);
         scheduleTokenRefresh(newToken);
-        console.log("Token refresh successful");
         return newToken;
       } else {
         throw new Error("Invalid refresh response structure");
@@ -239,11 +219,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log("Attempting login");
       const res = await api.post("/user/login", { email, password });
-
-      console.log("Login response:", res.data);
-
       if (res.data.success && res.data.token) {
         localStorage.setItem("token", res.data.token);
         setAccessToken(res.data.token);
@@ -252,7 +228,7 @@ export const AuthProvider = ({ children }) => {
         const userData = {
           id: decoded.userId,
           email: decoded.email,
-          role: decoded.role,
+          roles: decoded.roles, // Corrected line
           orgId: decoded.userOrg,
         };
 
@@ -312,11 +288,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const decoded = jwtDecode(token);
       const isValid = decoded.exp * 1000 > Date.now();
-      console.log("Token validity check:", {
-        isValid,
-        expiresAt: new Date(decoded.exp * 1000),
-        now: new Date()
-      });
       return isValid;
     } catch (err) {
       console.error("Error checking token validity:", err);
