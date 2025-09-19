@@ -5,20 +5,10 @@ import axios from "axios";
 import Topbar from "../../Components/Topbar/Topbar";
 import Sidebar from "../../Components/SideBar/Sidebar";
 import { Row, Col, Card, Spinner, Alert, Button, Badge, Form } from "react-bootstrap";
-
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  BarChart,
-  Bar,
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar,
 } from "recharts";
 
 const COLORS = ["#667eea", "#764ba2", "#f093fb", "#f5576c", "#4facfe", "#00f2fe"];
@@ -29,8 +19,6 @@ const cardStyle = {
   boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
 };
-
-
 
 const TicketsByStatus = ({ data }) => (
   <Card style={cardStyle} className="h-100">
@@ -301,67 +289,55 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [timeRange, setTimeRange] = useState("30");
   const [myTickets, setMyTickets] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-const [priorityFilter, setPriorityFilter] = useState("all");
- 
+  
+  useEffect(() => {
+    if (!accessToken) navigate("/login");
+  }, [accessToken, navigate]);
 
   useEffect(() => {
-  if (accessToken && user) {
-    const fetchMyTicket = async () => {
+    const fetchDashboardData = async () => {
+      if (!orgId || !accessToken) return;
+
+      setLoading(true);
       try {
-        const id = user.id;
-        const results = await axios.get(`http://localhost:3000/tickets/${id}/my`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
+        const overviewRes = await axios.get(
+          `http://localhost:3000/tickets/${orgId}/dashboard/overview?range=${timeRange}`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        setOverview(overviewRes.data.data);
+        setErr(null);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+        setErr("Failed to load dashboard data");
+        setOverview(null); // Ensure state is reset on error
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    const fetchMyTickets = async () => {
+      if (!user || !user.id || !accessToken) return;
+      try {
+        const myTicketsRes = await axios.get(`http://localhost:3000/tickets/${user.id}/my`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
         });
-        setMyTickets(results.data.data || []);
+        setMyTickets(myTicketsRes.data.data || []);
       } catch (error) {
         console.error("Error fetching my tickets:", error);
         setMyTickets([]);
         setErr("Failed to fetch tickets assigned to you.");
       }
     };
-    fetchMyTicket();
-  }
-}, [accessToken, user]);
 
-  useEffect(() => {
-    if (!accessToken) navigate("/login");
-  }, [accessToken, navigate]);
+    fetchDashboardData();
+    fetchMyTickets();
 
-  useEffect(() => {
-    if (orgId && accessToken) fetchOverview();
-  }, [orgId, accessToken]);
+  }, [orgId, accessToken, timeRange, user]); // Combined dependencies
 
-  const fetchOverview = async (range = timeRange) => {
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `http://localhost:3000/tickets/${orgId}/dashboard/overview?range=${range}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-      setOverview(res.data.data);
-      setErr(null);
-    } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
-      setErr("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (orgId && accessToken) fetchOverview(timeRange);
-  }, [orgId, accessToken, timeRange]);
-
-  const filteredTickets =
-    overview?.recent?.filter((t) =>
-      t.title.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || [];
-
+  const filteredTickets = myTickets.filter(t =>
+    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
   const getStatusBadgeStyle = (status) => {
     const styles = {
       open: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white' },
@@ -425,7 +401,10 @@ const [priorityFilter, setPriorityFilter] = useState("all");
               style={{ borderRadius: '12px', border: 'none' }}
             >
               {err}
-              <Button size="sm" onClick={fetchOverview} style={{ borderRadius: '8px' }}>
+              <Button size="sm" onClick={() => {
+                setErr(null); // Clear error state before retrying
+                // A new fetch will be triggered by the `useEffect` on next render
+              }} style={{ borderRadius: '8px' }}>
                 Retry
               </Button>
             </Alert>
@@ -455,7 +434,6 @@ const [priorityFilter, setPriorityFilter] = useState("all");
             <p className="text-muted lead">Monitor your organization's ticket performance</p>
           </div>
 
-
           {user && (
             <Card style={cardStyle} className="mb-4">
               <Card.Body className="p-4">
@@ -476,7 +454,7 @@ const [priorityFilter, setPriorityFilter] = useState("all");
                       </div>
                       <div>
                         <h4 className="mb-1 fw-bold">Welcome back, {user.email}!</h4>
-                      
+                        
                       </div>
                     </div>
                   </Col>
@@ -567,7 +545,7 @@ const [priorityFilter, setPriorityFilter] = useState("all");
                   </div>
                   <div>
                     <h4 className="mb-1 fw-bold">Recent Tickets</h4>
-                    <p className="text-muted mb-0">Latest 10 tickets assigned to You</p>
+                    <p className="text-muted mb-0">Latest tickets assigned to You</p>
                   </div>
                 </div>
               </div>
@@ -598,8 +576,8 @@ const [priorityFilter, setPriorityFilter] = useState("all");
                     </tr>
                   </thead>
                   <tbody>
-                    {myTickets.length > 0 ? (
-                      myTickets.map((ticket) => (
+                    {filteredTickets.length > 0 ? (
+                      filteredTickets.map((ticket) => (
                         <tr
                           key={ticket.id}
                           style={{ 
@@ -680,7 +658,7 @@ const [priorityFilter, setPriorityFilter] = useState("all");
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className="text-center py-5">
+                        <td colSpan="6" className="text-center py-5">
                           <div className="text-muted">
                             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
                             <h5>No tickets found</h5>

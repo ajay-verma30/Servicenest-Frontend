@@ -36,7 +36,7 @@ function Users() {
       try {
         setLoading(true);
         setError(null);
-        const results = await api.get("/user/all");
+        const results = await api.get(`/user/${orgId}/all`);
         setUsers(results.data.result || []);
       } catch (err) {
         console.error("Error fetching users:", err);
